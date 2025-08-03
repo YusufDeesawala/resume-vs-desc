@@ -1,5 +1,8 @@
-Flask
-docx2txt
+flask
 PyPDF2
+docx2txt
 scikit-learn
-numpy
+google-generativeai
+pdf2image
+pytesseract
+python-dotenv
