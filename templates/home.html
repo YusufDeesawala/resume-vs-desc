@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Matcher</title>
+</head>
+<body>
+    <h1>Resume Matcher</h1>
+    <form method="POST" action="/matcher" enctype="multipart/form-data">
+        <label for="job_description">Job Description:</label><br>
+        <textarea name="job_description" rows="5" cols="50" required></textarea><br>
+        <label for="resumes">Upload Resumes (PDF, DOCX, TXT):</label><br>
+        <input type="file" name="resumes" multiple accept=".pdf,.docx,.txt" required><br>
+        <input type="submit" value="Match Resumes">
+    </form>
+    {% if message %}
+        <h2>{{ message }}</h2>
+        {% if resume_score_pairs %}
+            <ul>
+            {% for resume, score in resume_score_pairs %}
+                <li>{{ resume }}: {{ score }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+    <p><a href="/analysis">Go to Resume Analysis</a></p>
+</body>
+</html>

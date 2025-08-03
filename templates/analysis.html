@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Analysis</title>
+    <script>
+        async function analyzeResume(event) {
+            event.preventDefault();
+            const form = document.getElementById('analysisForm');
+            const formData = new FormData(form);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            const resultDiv = document.getElementById('result');
+            if (result.error) {
+                resultDiv.innerHTML = `<p style="color:red;">${result.error}</p>`;
+            } else {
+                resultDiv.innerHTML = `
+                    <h2>Analysis Result</h2>
+                    <p><strong>Score:</strong> ${result.score}</p>
+                    <p><strong>Explanation:</strong> ${result.explanation}</p>
+                    <h3>Improvement Tips:</h3>
+                    <ul>
+                        ${result.improvement_tips.map(tip => `<li>${tip}</li>`).join('')}
+                    </ul>
+                    <p><strong>Content Preview:</strong> ${result.content}</p>
+                `;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Resume Analysis</h1>
+    <form id="analysisForm" enctype="multipart/form-data">
+        <label for="job_description">Job Description:</label><br>
+        <textarea name="job_description" rows="5" cols="50" required></textarea><br>
+        <label for="file">Upload Resume (PDF, DOCX, TXT):</label><br>
+        <input type="file" name="file" accept=".pdf,.docx,.txt" required><br>
+        <input type="submit" value="Analyze Resume" onclick="analyzeResume(event)">
+    </form>
+    <div id="result"></div>
+    <p><a href="/">Go to Resume Matcher</a></p>
+</body>
+</html>
