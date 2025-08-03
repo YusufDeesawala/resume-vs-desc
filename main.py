@@ -33,6 +33,14 @@ def extract_text(file_path):
     else:
         return ""
 
+def cleanup_files(file_paths):
+    for file_path in file_paths:
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except OSError as e:
+            print(f"Error deleting file {file_path}: {e}")
+
 @app.route("/")
 def matchresume():
     return render_template('index.html')
@@ -42,28 +50,34 @@ def matcher():
     if request.method == 'POST':
         job_description = request.form['job_description']
         resume_files = request.files.getlist('resumes')
+        uploaded_files = []
 
-        resumes = []
-        for resume_file in resume_files:
-            filename = os.path.join(app.config['UPLOAD_FOLDER'], resume_file.filename)
-            resume_file.save(filename)
-            resumes.append(extract_text(filename))
+        try:
+            resumes = []
+            for resume_file in resume_files:
+                filename = os.path.join(app.config['UPLOAD_FOLDER'], resume_file.filename)
+                resume_file.save(filename)
+                uploaded_files.append(filename)
+                resumes.append(extract_text(filename))
 
-        if not resumes or not job_description:
-            return render_template('index.html', message="Please upload resumes and enter a job description.")
+            if not resumes or not job_description:
+                return render_template('index.html', message="Please upload resumes and enter a job description.")
 
-        vectorizer = TfidfVectorizer().fit_transform([job_description] + resumes)
-        vectors = vectorizer.toarray()
+            vectorizer = TfidfVectorizer().fit_transform([job_description] + resumes)
+            vectors = vectorizer.toarray()
 
-        job_vector = vectors[0]
-        resume_vectors = vectors[1:]
-        similarities = cosine_similarity([job_vector], resume_vectors)[0]
+            job_vector = vectors[0]
+            resume_vectors = vectors[1:]
+            similarities = cosine_similarity([job_vector], resume_vectors)[0]
 
-        top_indices = similarities.argsort()[-5:][::-1]
-        top_resumes = [resume_files[i].filename for i in top_indices]
-        similarity_scores = [round(similarities[i], 2) for i in top_indices]
+            top_indices = similarities.argsort()[-5:][::-1]
+            top_resumes = [resume_files[i].filename for i in top_indices]
+            similarity_scores = [round(similarities[i], 2) for i in top_indices]
 
-        return render_template('index.html', message="Top matching resumes:", top_resumes=top_resumes, similarity_scores=similarity_scores)
+            return render_template('index.html', message="Top matching resumes:", top_resumes=top_resumes, similarity_scores=similarity_scores)
+
+        finally:
+            cleanup_files(uploaded_files)
 
     return render_template('index.html')
 
