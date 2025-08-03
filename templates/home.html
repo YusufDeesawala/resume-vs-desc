@@ -1,27 +1,368 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resume Matcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 165, 0, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff8c00, #ffa500, #ff6347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.6)); }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+        }
+
+        .form-container {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 165, 0, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: #ff8c00;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        textarea:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        input[type="file"] {
+            padding: 1.2rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(45deg, #ff8c00, #ffa500);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            background: linear-gradient(45deg, #ff8c00, #ffa500);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4);
+        }
+
+        .results {
+            margin-top: 3rem;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results h2 {
+            color: #ff8c00;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .results ul {
+            list-style: none;
+        }
+
+        .results li {
+            background: rgba(255, 165, 0, 0.1);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid #ff8c00;
+            transition: all 0.3s ease;
+        }
+
+        .results li:hover {
+            background: rgba(255, 165, 0, 0.2);
+            transform: translateX(10px);
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(255, 165, 0, 0.1);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            border-radius: 12px;
+            color: #ff8c00;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 165, 0, 0.2);
+            border-color: #ff8c00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Resume Matcher</h1>
-    <form method="POST" action="/matcher" enctype="multipart/form-data">
-        <label for="job_description">Job Description:</label><br>
-        <textarea name="job_description" rows="5" cols="50" required></textarea><br>
-        <label for="resumes">Upload Resumes (PDF, DOCX, TXT):</label><br>
-        <input type="file" name="resumes" multiple accept=".pdf,.docx,.txt" required><br>
-        <input type="submit" value="Match Resumes">
-    </form>
-    {% if message %}
-        <h2>{{ message }}</h2>
-        {% if resume_score_pairs %}
-            <ul>
-            {% for resume, score in resume_score_pairs %}
-                <li>{{ resume }}: {{ score }}</li>
-            {% endfor %}
-            </ul>
+    <div class="bg-particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Resume Matcher</h1>
+            <p class="subtitle">AI-Powered Resume Matching & Analysis</p>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" action="/matcher" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="job_description">Job Description</label>
+                    <textarea name="job_description" id="job_description" placeholder="Paste the job description here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="resumes">Upload Resumes</label>
+                    <input type="file" name="resumes" id="resumes" multiple accept=".pdf,.docx,.txt" required>
+                    <small style="color: #b0b0b0; display: block; margin-top: 0.5rem;">
+                        Supported formats: PDF, DOCX, TXT
+                    </small>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Match Resumes
+                </button>
+            </form>
+        </div>
+
+        {% if message %}
+        <div class="results">
+            <h2>{{ message }}</h2>
+            {% if resume_score_pairs %}
+                <ul>
+                {% for resume, score in resume_score_pairs %}
+                    <li>
+                        <strong>{{ resume }}</strong>
+                        <span style="float: right; color: #ff8c00; font-weight: bold;">{{ score }}</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
         {% endif %}
-    {% endif %}
-    <p><a href="/analysis">Go to Resume Analysis</a></p>
+
+        <a href="/analysis" class="nav-link">Go to Resume Analysis</a>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize particles when page loads
+        document.addEventListener('DOMContentLoaded', createParticles);
+
+        // Add file upload feedback
+        document.getElementById('resumes').addEventListener('change', function(e) {
+            const fileCount = e.target.files.length;
+            if (fileCount > 0) {
+                const label = document.querySelector('label[for="resumes"]');
+                label.innerHTML = `Upload Resumes <span style="color: #4CAF50;">(${fileCount} file${fileCount > 1 ? 's' : ''} selected)</span>`;
+            }
+        });
+    </script>
 </body>
 </html>

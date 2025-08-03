@@ -1,45 +1,557 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resume Analysis</title>
-    <script>
-        async function analyzeResume(event) {
-            event.preventDefault();
-            const form = document.getElementById('analysisForm');
-            const formData = new FormData(form);
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            const resultDiv = document.getElementById('result');
-            if (result.error) {
-                resultDiv.innerHTML = `<p style="color:red;">${result.error}</p>`;
-            } else {
-                resultDiv.innerHTML = `
-                    <h2>Analysis Result</h2>
-                    <p><strong>Score:</strong> ${result.score}</p>
-                    <p><strong>Explanation:</strong> ${result.explanation}</p>
-                    <h3>Improvement Tips:</h3>
-                    <ul>
-                        ${result.improvement_tips.map(tip => `<li>${tip}</li>`).join('')}
-                    </ul>
-                    <p><strong>Content Preview:</strong> ${result.content}</p>
-                `;
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 165, 0, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff8c00, #ffa500, #ff6347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.6)); }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+        }
+
+        .form-container {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 165, 0, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+            color: #ff8c00;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        textarea:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        input[type="file"] {
+            padding: 1.2rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(45deg, #ff8c00, #ffa500);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.4);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            background: linear-gradient(45deg, #ff8c00, #ffa500);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 165, 0, 0.3);
+            border-top: 3px solid #ff8c00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-container h2 {
+            color: #ff8c00;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 165, 0, 0.1);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ff8c00;
+            display: block;
+        }
+
+        .score-label {
+            color: #b0b0b0;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .explanation {
+            background: rgba(255, 165, 0, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #ff8c00;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .improvement-tips {
+            margin-bottom: 2rem;
+        }
+
+        .improvement-tips h3 {
+            color: #ff8c00;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .improvement-tips ul {
+            list-style: none;
+        }
+
+        .improvement-tips li {
+            background: rgba(255, 165, 0, 0.1);
+            margin-bottom: 0.8rem;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 3px solid #ff8c00;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 2.5rem;
+        }
+
+        .improvement-tips li::before {
+            content: '💡';
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .improvement-tips li:hover {
+            background: rgba(255, 165, 0, 0.2);
+            transform: translateX(5px);
+        }
+
+        .content-preview {
+            background: rgba(10, 10, 10, 0.5);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .content-preview h4 {
+            color: #ff8c00;
+            margin-bottom: 1rem;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b6b;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(255, 165, 0, 0.1);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            border-radius: 12px;
+            color: #ff8c00;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 165, 0, 0.2);
+            border-color: #ff8c00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-container, .result-container {
+                padding: 1.5rem;
+            }
+            
+            .score-value {
+                font-size: 2.5rem;
             }
         }
-    </script>
+    </style>
 </head>
 <body>
-    <h1>Resume Analysis</h1>
-    <form id="analysisForm" enctype="multipart/form-data">
-        <label for="job_description">Job Description:</label><br>
-        <textarea name="job_description" rows="5" cols="50" required></textarea><br>
-        <label for="file">Upload Resume (PDF, DOCX, TXT):</label><br>
-        <input type="file" name="file" accept=".pdf,.docx,.txt" required><br>
-        <input type="submit" value="Analyze Resume" onclick="analyzeResume(event)">
-    </form>
-    <div id="result"></div>
-    <p><a href="/">Go to Resume Matcher</a></p>
+    <div class="bg-particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Resume Analysis</h1>
+            <p class="subtitle">AI-Powered Individual Resume Analysis</p>
+        </div>
+
+        <div class="form-container">
+            <form id="analysisForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="job_description">Job Description</label>
+                    <textarea name="job_description" id="job_description" placeholder="Paste the job description here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Upload Resume</label>
+                    <input type="file" name="file" id="file" accept=".pdf,.docx,.txt" required>
+                    <small style="color: #b0b0b0; display: block; margin-top: 0.5rem;">
+                        Supported formats: PDF, DOCX, TXT
+                    </small>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Analyze Resume
+                </button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your resume... Please wait</p>
+        </div>
+
+        <div class="result-container" id="result"></div>
+
+        <a href="/" class="nav-link">Go to Resume Matcher</a>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize particles when page loads
+        document.addEventListener('DOMContentLoaded', createParticles);
+
+        // Add file upload feedback
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const label = document.querySelector('label[for="file"]');
+                label.innerHTML = `Upload Resume <span style="color: #4CAF50;">(${file.name} selected)</span>`;
+            }
+        });
+
+        // Handle form submission
+        async function analyzeResume(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('analysisForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analyzing...';
+            loading.style.display = 'block';
+            resultDiv.classList.remove('show');
+            
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading
+                loading.style.display = 'none';
+                
+                if (result.error) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>Error</h3>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2>Analysis Result</h2>
+                        
+                        <div class="score-display">
+                            <span class="score-value">${result.score}</span>
+                            <div class="score-label">Match Score</div>
+                        </div>
+                        
+                        <div class="explanation">
+                            <h3 style="color: #ff8c00; margin-bottom: 1rem;">Explanation</h3>
+                            <p>${result.explanation}</p>
+                        </div>
+                        
+                        <div class="improvement-tips">
+                            <h3>Improvement Tips</h3>
+                            <ul>
+                                ${result.improvement_tips.map(tip => `<li>${tip}</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="content-preview">
+                            <h4>Content Preview</h4>
+                            <pre>${result.content.substring(0, 500)}${result.content.length > 500 ? '...' : ''}</pre>
+                        </div>
+                    `;
+                }
+                
+                resultDiv.classList.add('show');
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Error</h3>
+                        <p>An error occurred while analyzing your resume. Please try again.</p>
+                    </div>
+                `;
+                resultDiv.classList.add('show');
+            }
+            
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Analyze Resume';
+        }
+
+        // Add event listener to form
+        document.getElementById('analysisForm').addEventListener('submit', analyzeResume);
+    </script>
 </body>
 </html>
