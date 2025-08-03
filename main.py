@@ -35,7 +35,7 @@ def extract_text(file_path):
 
 @app.route("/")
 def matchresume():
-    return render_template('matchresume.html')
+    return render_template('index.html')
 
 @app.route('/matcher', methods=['POST'])
 def matcher():
@@ -50,7 +50,7 @@ def matcher():
             resumes.append(extract_text(filename))
 
         if not resumes or not job_description:
-            return render_template('matchresume.html', message="Please upload resumes and enter a job description.")
+            return render_template('index.html', message="Please upload resumes and enter a job description.")
 
         vectorizer = TfidfVectorizer().fit_transform([job_description] + resumes)
         vectors = vectorizer.toarray()
@@ -63,9 +63,9 @@ def matcher():
         top_resumes = [resume_files[i].filename for i in top_indices]
         similarity_scores = [round(similarities[i], 2) for i in top_indices]
 
-        return render_template('matchresume.html', message="Top matching resumes:", top_resumes=top_resumes, similarity_scores=similarity_scores)
+        return render_template('index.html', message="Top matching resumes:", top_resumes=top_resumes, similarity_scores=similarity_scores)
 
-    return render_template('matchresume.html')
+    return render_template('index.html')
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
