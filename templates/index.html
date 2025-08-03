@@ -210,10 +210,27 @@
         }
 
         .alert li {
-            padding: 0.5rem 0;
+            padding: 0.75rem 0;
             color: #a1a1aa;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             transition: color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .resume-name {
+            font-weight: 500;
+            color: #d4d4d8;
+        }
+
+        .similarity-score {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .alert li:hover {
@@ -299,15 +316,22 @@
                     <button type="submit" class="btn-primary">Analyze Matches</button>
                 </form>
                 
-                <!-- This section would be populated by your backend -->
-                <div class="alert" style="display: none;">
-                    <p>Top matching resumes:</p>
-                    <ul>
-                        <li>resume_1.pdf (Similarity Score: 0.89)</li>
-                        <li>resume_2.pdf (Similarity Score: 0.76)</li>
-                        <li>resume_3.pdf (Similarity Score: 0.71)</li>
-                    </ul>
-                </div>
+                <!-- Results section for Flask backend -->
+                {% if message %}
+                    <div class="alert">
+                        <p>{{ message }}</p>
+                        {% if top_resumes %}
+                            <ul>
+                                {% for index in range(top_resumes|length) %}
+                                    <li>
+                                        <span class="resume-name">{{ top_resumes[index] }}</span>
+                                        <span class="similarity-score">Score: {{ similarity_scores[index] }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -343,6 +367,12 @@
                 const button = form.querySelector('.btn-primary');
                 button.textContent = 'Analyzing...';
                 button.style.opacity = '0.7';
+                button.disabled = true;
+                
+                // Re-enable button after a delay (in case of slow processing)
+                setTimeout(() => {
+                    button.disabled = false;
+                }, 10000);
             });
         });
     </script>
