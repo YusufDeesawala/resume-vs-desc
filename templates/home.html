@@ -325,7 +325,7 @@
                 {% for resume, score in resume_score_pairs %}
                     <li>
                         <strong>{{ resume }}</strong>
-                        <span style="float: right; color: #ff8c00; font-weight: bold;">{{ score }}</span>
+                        <span style="float: right; color: #ff8c00; font-weight: bold;">{{ '%.1f'|format(score * 100) }}%</span>
                     </li>
                 {% endfor %}
                 </ul>
